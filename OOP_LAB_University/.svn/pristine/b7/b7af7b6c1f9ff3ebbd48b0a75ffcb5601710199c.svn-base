@@ -1,0 +1,79 @@
+package university;
+
+import java.util.logging.Logger;
+
+/**
+ * This class is an extended version of the {@Link University} class.
+ * 
+ *
+ */
+public class UniversityExt extends University {
+	
+	
+	
+	private final static Logger logger = Logger.getLogger("University");
+
+	public UniversityExt(String name) {
+		super(name);
+		// Example of logging
+		logger.info("Creating extended university object");
+	}
+
+	public void exam(int studentId, int courseID, int grade) {
+		
+		if(m_iscr[studentId-c_stud][courseID-c_ins] == 99)
+			m_iscr[studentId-c_stud][courseID-c_ins] = grade;
+	}
+
+	public String studentAvg(int studentId) {
+		
+		int sum=0;
+		int nEsamiSup=0;
+		
+		for(int j=0; j<m_iscr[studentId-c_stud].length; j++) {
+			if(m_iscr[studentId-c_stud][j] < 90) { // cioè 0<voto<30
+				sum += m_iscr[studentId-c_stud][j];
+				nEsamiSup++;
+			}
+		}
+		
+		if(nEsamiSup > 0)
+			return "Student " + studentId + ": " + sum/nEsamiSup;
+		return "Student STUDENT_ID hasn't taken any exams";
+	}
+	
+	public String courseAvg(int courseId) {
+		int sum=0;
+		int nStudSup=0;
+		
+		for(int i=0; i<m_iscr[courseId-c_stud].length; i++) {
+			if(m_iscr[courseId-c_stud][i] < 90) { // cioè 0<voto<30
+				sum += m_iscr[courseId-c_stud][i];
+				nStudSup++;
+			}
+		}
+		
+		if(nStudSup > 0)
+			return "The average for the course" +  courseId + " is: " + sum/nStudSup;
+		return "No student has taken the exam in COURSE_TITLE";
+	}
+	
+	/**
+	 * Retrieve information for the best students to award a price.
+	 * 
+	 * The students' score is evaluated as the average grade of the exams they've taken. 
+	 * To take into account the number of exams taken and not only the grades, 
+	 * a special bonus is assigned on top of the average grade: 
+	 * the number of taken exams divided by the number of courses the student is enrolled to, multiplied by 10.
+	 * The bonus is added to the exam average to compute the student score.
+	 * 
+	 * The method returns a string with the information about the three students with the highest score. 
+	 * The students appear one per row (rows are terminated by a new-line character {@code '\n'}) 
+	 * and each one of them is formatted as: {@code "STUDENT_FIRSTNAME STUDENT_LASTNAME : SCORE"}.
+	 * 
+	 * @return info of the best three students.
+	 */
+	public String topThreeStudents() {
+		return null;
+	}
+}

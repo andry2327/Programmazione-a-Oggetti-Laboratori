@@ -1,0 +1,127 @@
+package diet;
+
+import java.util.Collection;
+import java.util.TreeSet;
+
+/**
+ * Represents the main class in the
+ * take-away system.
+ * 
+ * It allows adding restaurant, users, and creating orders.
+ *
+ */
+public class Takeaway {
+	
+	Collection<Restaurant> restaurantList = new TreeSet<Restaurant> ();
+	Collection<String> restaurantNameList = new TreeSet<String> ();
+	Collection<Restaurant> openedRestaurantList;
+	Collection<User> userList = new TreeSet<User> ();
+	Collection<String> userNameList = new TreeSet<String> ();
+	Collection<Order> orderList = new TreeSet<Order> ();
+	
+	public void addRestaurant(Restaurant r) {
+		
+		restaurantList.add(r);
+		restaurantNameList.add(r.getName());
+	}
+	
+	public Collection<String> restaurants() {
+		return restaurantNameList;
+	}
+	
+	public User registerUser(String firstName, String lastName, String email, String phoneNumber) {
+		
+		User u = new User(firstName, lastName, email, phoneNumber);
+		userList.add(u);
+		userNameList.add(u.getLastName() + " " + u.getFirstName());
+		
+		return u;
+	}
+	
+	public Collection<User> users(){
+		return userList;
+	}
+	
+	/**
+	 * Create a new order by a user to a given restaurant.
+	 * 
+	 * The order is initially empty and is characterized
+	 * by a desired delivery time. 
+	 * 
+	 * @param user				user object
+	 * @param restaurantName	restaurant name
+	 * @param h					delivery time hour
+	 * @param m					delivery time minutes
+	 * @return
+	 */
+	public Order createOrder(User user, String restaurantName, int h, int m) {
+		
+		Order or = new Order(user, restaurantName, h, m);
+		if(isUserIn(user) && isResturantIn(restaurantName)) {
+			if(!isOpenedRestaurantListIn(restaurantName)) {
+				Restaurant r = this.getResturantInList(restaurantName);
+				String newOpening = r.getFirstOpening(restaurantName);
+				String tempH = newOpening.substring(0, 1);
+				String tempM = newOpening.substring(3, 4);
+				or.setTime(Integer.parseInt(tempH), Integer.parseInt(tempM));
+			}
+			orderList.add(or);
+		}
+		return null;
+	}
+	
+	public boolean isUserIn(User user) {
+		
+		for(User u: userList)
+			if(u.equals(user))
+				return true;
+		return false;
+	}
+	
+	public boolean isResturantIn(String restaurant) {
+		
+		for(String s: restaurantNameList)
+			if(s.equals(restaurant))
+				return true;
+		return false;
+	}
+	
+	public Restaurant getResturantInList(String restaurant) {
+		
+		for(Restaurant r: restaurantList)
+			if(r.getName().equals(restaurant))
+				return r;
+		return null;
+	}
+	
+	public boolean isOpenedRestaurantListIn(String restaurant) {
+		
+		for(Restaurant s: openedRestaurantList)
+			if(s.getName().equals(restaurant))
+				return true;
+		return false;
+	}
+	
+	/**
+	 * Retrieves the collection of restaurant that are open
+	 * at the given time.
+	 * 
+	 * @param time time to check open
+	 * 
+	 * @return collection of restaurants
+	 */
+	public Collection<Restaurant> openedRestaurants(String time){
+		
+		openedRestaurantList = new TreeSet<Restaurant> ();
+		
+		for(Restaurant r: restaurantList) {
+			if(r.isOpen(time)) {
+				openedRestaurantList.add(r);
+			}
+		}
+		return openedRestaurantList;
+	}
+
+	
+	
+}

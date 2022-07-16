@@ -1,0 +1,37 @@
+package hydraulic;
+
+/**
+ * Represents the generic abstract element of an hydraulics system.
+ * It is the base class for all elements.
+ *
+ * Any element can be connect to a downstream element
+ * using the method {@link #connect(Element) connect()}.
+ */
+public abstract class Element {
+	
+	String name;
+	Element in;
+	Element out;
+	
+	public Element(String name){
+		
+		this.name = new String();
+		this.in = null;
+		this.out = null;
+	}
+
+	public String getName(){
+		return this.name;
+	}
+	
+	public void connect(Element elem){
+		
+		if(this.name != "Sink")
+			this.out = elem.in;
+	}
+	
+	public Element getOutput(){	
+		return this.out;
+	}
+	
+}

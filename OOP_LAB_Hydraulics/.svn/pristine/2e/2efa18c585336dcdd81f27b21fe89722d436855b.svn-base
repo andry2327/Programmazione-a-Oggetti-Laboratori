@@ -1,0 +1,30 @@
+package hydraulic;
+
+/**
+ * Main class that act as a container of the elements for
+ * the simulation of an hydraulics system 
+ * 
+ */
+public class HSystem {
+	
+	private Element[] vettElem = new Element[100];
+	private int currN = 0;
+	
+	public void addElement(Element elem){
+		
+		this.vettElem[currN] = elem;
+		currN++;
+	}
+	
+	public Element[] getElements(){
+		return this.vettElem;
+	}
+	
+	/**
+	 * starts the simulation of the system
+	 */
+	public void simulate(SimulationObserver observer){
+		// TODO: to be implemented
+	}
+
+}

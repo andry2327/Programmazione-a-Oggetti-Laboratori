@@ -1,0 +1,250 @@
+package clinic;
+
+import java.io.IOException;
+import java.io.LineNumberReader;
+import java.io.Reader;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.OptionalDouble;
+import java.util.TreeMap;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+/**
+ * Represents a clinic with patients and doctors.
+ * 
+ */
+public class Clinic implements ErrorListener {
+
+	
+	Collection<Patient> patientList = new TreeSet<Patient> ();
+	Collection<Doctor> doctorList = new TreeSet<Doctor> ();
+	Map<String, Integer> patientToDoctor = new TreeMap<String, Integer> ();
+	Map<Integer, ArrayList<String>> DoctorToPatient = new TreeMap<Integer, ArrayList<String>> ();
+
+	
+	public void addPatient(String first, String last, String ssn) {
+		
+		patientList.add(new Patient(first, last, ssn));
+	}
+
+	public String getPatient(String ssn) throws NoSuchPatient {
+		
+		for(Patient p: patientList) {
+			if(p.getSSN().compareTo(ssn)==0) {	
+				return p.getCognome() + " " + p.getNome() + " (" + p.getSSN() + ")";
+			}
+		}
+		
+		NoSuchPatient err = new NoSuchPatient("Paziente non trovato");
+		throw err;
+	}
+
+	public void addDoctor(String first, String last, String ssn, int docID, String specialization) {
+
+		doctorList.add(new Doctor(first, last, ssn, Integer.valueOf(docID), specialization));
+	}
+
+	public String getDoctor(int docID) throws NoSuchDoctor {
+		
+		for(Doctor d: doctorList) {
+			if(d.getDocID().compareTo(docID)==0) {	
+				return d.getCognome() + " " + d.getNome() + " (" + d.getSSN() + ") [" + d.getDocID() + "]: " + d.getSpecializzazione();
+			}
+		}
+		
+		NoSuchDoctor err = new NoSuchDoctor("Dottore non trovato");
+		throw err;
+	}
+
+	public void assignPatientToDoctor(String ssn, int docID) throws NoSuchPatient, NoSuchDoctor {
+		
+		boolean errP=true, errD=true;
+		
+		for(Patient p: patientList) {
+			if (p.getSSN() == ssn) {
+				errP=false;
+				for(Doctor d: doctorList) {
+					if(d.getDocID() == docID) {
+						errD=false;
+						patientToDoctor.put(ssn, Integer.valueOf(docID));
+						
+						if(DoctorToPatient.containsKey(Integer.valueOf(docID))) {
+							DoctorToPatient.get(Integer.valueOf(docID)).add(ssn); 
+						}else {
+							ArrayList<String> ls = new ArrayList<String>();
+							ls.add(ssn);
+							DoctorToPatient.put(Integer.valueOf(docID), ls);
+						}
+						
+					}
+				}
+				if(errD) {
+					NoSuchDoctor err = new NoSuchDoctor("Dottore non trovato");
+					throw err;
+				}
+			}
+		}
+		if(errP) {
+			NoSuchPatient err = new NoSuchPatient("Paziente non trovato");
+			throw err;
+		}
+
+	}
+	
+	/**
+	 * Retrieves the id of the doctor assigned to a given patient.
+	 * 
+	 * @param ssn SSN of the patient
+	 * @return id of the doctor
+	 * @throws NoSuchPatient in case of not patient with matching SSN
+	 * @throws NoSuchDoctor in case no doctor has been assigned to the patient
+	 */
+	public int getAssignedDoctor(String ssn) throws NoSuchPatient, NoSuchDoctor {
+		
+		boolean pIsIn = patientList.stream()
+			.map(Patient::getSSN)
+			.collect(Collectors.toList()).contains(ssn);
+		
+		if(!pIsIn) {
+			NoSuchPatient err = new NoSuchPatient("Paziente non trovato");
+			throw err;
+		}
+		
+		if(!patientToDoctor.containsKey(ssn)) {
+			NoSuchDoctor err = new NoSuchDoctor("Dottore non trovato");
+			throw err;
+		}
+		return patientToDoctor.get(ssn);
+	}
+
+	public Collection<String> getAssignedPatients(int id) throws NoSuchDoctor {
+
+		boolean dIsIn = doctorList.stream()
+				.map(Doctor::getDocID)
+				.collect(Collectors.toList()).contains(Integer.valueOf(id));
+		
+		if(!dIsIn) {
+			NoSuchDoctor err = new NoSuchDoctor("Dottore non trovato");
+			throw err;
+		}
+		return DoctorToPatient.get(Integer.valueOf(id));
+	}
+
+	public int loadData(Reader reader) throws IOException {
+		
+		LineNumberReader text = new LineNumberReader(reader);
+		String line;
+		int n;
+		
+		
+		while((line = text.readLine()) != null) {
+			line = line.replace(" ", "");
+			try {
+				if (line.matches("P;[\\w]+;[\\w]+;[\\w]+")) {
+				
+					String[] fileRowSplit = line.split(";");
+					patientList.add(new Patient(fileRowSplit[1], fileRowSplit[2], fileRowSplit[3]));
+				
+				}else if(line.matches("M;[\\d]+;[\\w]+;[\\w]+;[\\w]+;[\\w]+")){
+				
+					String[] fileRowSplit = line.split(";");
+					doctorList.add(new Doctor(fileRowSplit[2], fileRowSplit[3], fileRowSplit[4], Integer.parseInt(fileRowSplit[1]), fileRowSplit[5]));
+				}
+			}catch(Exception e){
+				if (e instanceof IOException) {
+	                 System.out.println(e.getMessage());
+	             }
+			}
+		}
+		
+		return text.getLineNumber();		
+	}
+
+	public int loadData(Reader reader, ErrorListener listener) throws IOException {
+
+		LineNumberReader text = new LineNumberReader(reader);
+		String line;
+		int n;
+		
+		
+		while((line = text.readLine()) != null) {
+			line = line.replace(" ", "");
+			try {
+				if (line.matches("P;[\\w]+;[\\w]+;[\\w]+")) {
+				
+					String[] fileRowSplit = line.split(";");
+					patientList.add(new Patient(fileRowSplit[1], fileRowSplit[2], fileRowSplit[3]));
+				
+				}else if(line.matches("M;[\\d]+;[\\w]+;[\\w]+;[\\w]+;[\\w]+")){
+				
+					String[] fileRowSplit = line.split(";");
+					doctorList.add(new Doctor(fileRowSplit[2], fileRowSplit[3], fileRowSplit[4], Integer.parseInt(fileRowSplit[1]), fileRowSplit[5]));
+				}else {
+					offending(line);
+				}
+			}catch(Exception e){
+				if (e instanceof IOException) {
+					offending(line);
+	                System.out.println(e.getMessage());
+	             }
+			}
+		}	
+		return text.getLineNumber();		
+	}
+
+	public Collection<Integer> idleDoctors(){
+		
+		return DoctorToPatient.keySet().stream()
+				.filter(p -> DoctorToPatient.get(p).isEmpty()==true)
+				.collect(Collectors.toList());
+	}
+
+	public Collection<Integer> busyDoctors(){
+		
+		Double avg = DoctorToPatient.keySet().stream()
+					.mapToInt(p -> DoctorToPatient.get(p).size())
+					.average().getAsDouble();
+
+		Collection<Integer> c = DoctorToPatient.keySet().stream()
+				.filter(p -> DoctorToPatient.get(p).size() > avg)
+				.collect(Collectors.toList());
+		
+		return c;
+	}
+/* CHEEEEEECKKKKK */
+	public Collection<String> doctorsByNumPatients(){
+		
+		/*Map<Integer, Integer> c = DoctorToPatient.keySet().stream()
+				.map(p -> p::DoctorToPatient.get(p).size()) // mappo in un altra mappa
+				;*/
+		
+		return null;
+	}
+	
+	/**
+	 * Retrieves the number of patients per (their doctor's)  speciality
+	 * <p>
+	 * The information is a collections of strings structured as {@code ### - SPECIALITY}
+	 * where {@code SPECIALITY} is the name of the speciality and 
+	 * {@code ###} is the number of patients cured by doctors with such speciality (printed on three characters).
+	 * <p>
+	 * The elements are sorted first by decreasing count and then by alphabetic speciality.
+	 * 
+	 * @return the collection of strings with speciality and patient count information.
+	 */
+	public Collection<String> countPatientsPerSpecialization(){
+		// TODO Complete method
+		return null;
+	}
+
+	@Override
+	public void offending(String line) {
+		System.out.println("Linea scartata: " + line);
+	}
+	
+}
